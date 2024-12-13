@@ -72,3 +72,11 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+android  
+ios
+.bundle
+__tests__
+.watchmanconfig
+Genfile
+jest.config.js
+package-lock.json
