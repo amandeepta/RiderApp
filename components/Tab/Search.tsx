@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, StyleSheet, TextInput, Button, Alert } from 'react-native';
+import { SafeAreaView, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-// Define the navigation parameters type
 type RootStackParamList = {
   Rides: { pickup: string; dropoff: string };
 };
 
-// Define the navigation prop type
 type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Rides'>;
 
 const Search: React.FC = () => {
@@ -21,8 +19,6 @@ const Search: React.FC = () => {
       Alert.alert('Input Error', 'Please enter both pickup and dropoff locations.');
       return;
     }
-    console.log('Pickup:', pickup);
-    console.log('Dropoff:', dropoff);
     navigation.navigate('Rides', {
       pickup,
       dropoff,
@@ -37,18 +33,20 @@ const Search: React.FC = () => {
         placeholder="Enter the pickup location"
         value={pickup}
         onChangeText={setPickup}
-        multiline={false}
-        numberOfLines={1}
+        placeholderTextColor="#888"
+        autoCorrect={false}
       />
       <TextInput
         style={styles.textInput}
         placeholder="Enter the dropoff location"
         value={dropoff}
         onChangeText={setDropoff}
-        multiline={false}
-        numberOfLines={1}
+        placeholderTextColor="#888"
+        autoCorrect={false}
       />
-      <Button title="Search" onPress={handleSearch} />
+      <TouchableOpacity style={styles.button} onPress={handleSearch}>
+        <Text style={styles.buttonText}>Search</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -56,27 +54,49 @@ const Search: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f3f4f6',
+    padding: 25,
+    backgroundColor: '#1E1E2C',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
+    color: '#fff',
   },
   textInput: {
-    height: 50,
+    height: 55,
     width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: '#444',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    fontSize: 18,
+    color: '#fff',
+    backgroundColor: '#282828',
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  button: {
+    backgroundColor: '#00BFFF',
+    paddingVertical: 15,
+    paddingHorizontal: 50,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
   },
 });
 

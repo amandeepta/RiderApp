@@ -13,7 +13,7 @@ import Create from './Tab/Create';
 // Define navigation parameter types
 type RootStackParamList = {
   Rides: { pickup: string; dropoff: string };
-  RiderInfo: { id: string }; // Fix RiderInfo parameter type
+  RiderInfo: { id: string };
   Main: undefined;
 };
 
@@ -21,29 +21,35 @@ type RootStackParamList = {
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Define tabBarIcon function outside the render method
 const tabBarIcon = (name: string) => {
   return ({ color, size }: { color: string; size: number }) => (
     <Ionicons name={name} color={color} size={size} />
   );
 };
 
-// Define TabNavigator outside of render method
 function TabNavigator() {
   return (
-    <Tab.Navigator initialRouteName="Search">
+    <Tab.Navigator
+      initialRouteName="Search"
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { backgroundColor: '#2B2B3C', borderTopColor: '#1E1E2C' },
+        tabBarActiveTintColor: '#8F94FB',
+        tabBarInactiveTintColor: '#B3B3C5',
+      }}
+    >
       <Tab.Screen
         name="Search"
         component={Search}
         options={{
-          tabBarIcon: tabBarIcon("search"),
+          tabBarIcon: tabBarIcon('search'),
         }}
       />
       <Tab.Screen
         name="Create"
         component={Create}
         options={{
-          tabBarIcon: tabBarIcon("add-circle"),
+          tabBarIcon: tabBarIcon('add-circle'),
         }}
       />
     </Tab.Navigator>
@@ -56,28 +62,28 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 5000);
+    }, 3000);
 
-    return () => clearTimeout(timer); // Clean up the timer on unmount
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <NavigationContainer>
       {showSplash ? (
-        <SafeAreaView style={styles.container}>
-          <Text style={styles.text}>Rider</Text>
+        <SafeAreaView style={styles.splashContainer}>
+          <Text style={styles.splashText}>Rider</Text>
         </SafeAreaView>
       ) : (
         <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
           <Stack.Screen
             name="Rides"
             component={Rides}
-            initialParams={{ pickup: '', dropoff: '' }} // Pass initialParams for Rides
+            initialParams={{ pickup: '', dropoff: '' }}
           />
           <Stack.Screen
             name="RiderInfo"
             component={RiderInfo}
-            initialParams={{ id: '' }} // Pass initialParams for RiderInfo
+            initialParams={{ id: '' }}
           />
           <Stack.Screen name="Main" component={TabNavigator} />
         </Stack.Navigator>
@@ -87,14 +93,15 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  splashContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#1E1E2C',
   },
-  text: {
-    fontSize: 24,
+  splashText: {
+    fontSize: 32,
     fontWeight: 'bold',
+    color: '#8F94FB',
   },
 });

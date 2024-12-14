@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import axios from 'axios';
-import MapView, { Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 
 type RootStackParamList = {
-  RiderInfo: { id: string }; // Ensure the id is passed as a string
+  RiderInfo: { id: string };
 };
 
 type RiderInfoRouteProp = RouteProp<RootStackParamList, 'RiderInfo'>;
@@ -16,36 +16,34 @@ interface RiderInfoProps {
 
 const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
   const { id } = route.params;
-  // State to store user data, coordinates, and loading state
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser ] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sourceCoords, setSourceCoords] = useState<{ latitude: number, longitude: number } | null>(null);
-  const [destinationCoords, setDestinationCoords] = useState<{ latitude: number, longitude: number } | null>(null);
+  const [sourceCoords, setSourceCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // Function to fetch coordinates from Nominatim API
   const getCoordinates = async (address: string) => {
     try {
       const response = await axios.get('https://nominatim.openstreetmap.org/search', {
         params: {
           q: address,
           format: 'json',
-          limit: 1,// Limit to 1 result for simplicity
+          limit: 1,
         },
       });
 
-      const result = response.data[0]; // First result from Nominatim
+      const result = response.data[0];
       if (result) {
         return {
           latitude: parseFloat(result.lat),
           longitude: parseFloat(result.lon),
         };
       } else {
-        setError('Could not find coordinates for the address');
+        console.error('Could not find coordinates for the address:', address);
         return null;
       }
     } catch (err) {
-      setError('Failed to fetch coordinates');
+      console.error('Failed to fetch coordinates for:', address, err);
       return null;
     }
   };
@@ -53,17 +51,27 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://riderserver.onrender.com/info', { params: { id } });
-        setUser(response.data);
+        const response = await axios.post('https://riderserver.onrender.com/info', { id: id });
+        const userData = response.data.data;
+        setUser (userData);
 
-        // Fetch coordinates for source and destination
-        const sourceCoordinates = await getCoordinates(response.data.source);
-        const destinationCoordinates = await getCoordinates(response.data.destination);
+        const sourceCoordinates = await getCoordinates(userData.source);
+        const destinationCoordinates = await getCoordinates(userData.destination);
 
-        setSourceCoords(sourceCoordinates);
-        setDestinationCoords(destinationCoordinates);
+        if (sourceCoordinates) {
+          setSourceCoords(sourceCoordinates);
+        } else {
+          setError('Unable to retrieve source coordinates.');
+        }
+
+        if (destinationCoordinates) {
+          setDestinationCoords(destinationCoordinates);
+        } else {
+          setError('Unable to retrieve destination coordinates.');
+        }
       } catch (err) {
-        setError('Failed to fetch data');
+        console.error('Failed to fetch user data:', err);
+        setError('Failed to fetch user data');
       } finally {
         setLoading(false);
       }
@@ -75,8 +83,8 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#FFB74D" />
+        <Text style={styles.loadingText}>Fetching Rider Information...</Text>
       </View>
     );
   }
@@ -84,63 +92,133 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <Text>Hi, Rider {id}</Text>
-      {user ? (
-        <View style={styles.details}>
-          <Text>Name: {user.name}</Text>
-          <Text>Begin: {user.source}</Text>
-          <Text>Destination: {user.destination}</Text>
+  const openStreetMapHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Map</title>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+      />
+      <script
+        src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+      ></script>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #2B2B2B;">
+      <div id="map" style="width: 100%; height: 100vh"></div>
+      <script>
+        var map = L.map('map');
 
-          {/* Display map if we have coordinates */}
-          {sourceCoords && destinationCoords ? (
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: (sourceCoords.latitude + destinationCoords.latitude) / 2,
-                longitude: (sourceCoords.longitude + destinationCoords.longitude) / 2,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-              }}
-            >
-              <Marker coordinate={sourceCoords} title="Source" />
-              <Marker coordinate={destinationCoords} title="Destination" />
-            </MapView>
-          ) : (
-            <Text>Unable to load map</Text>
-          )}
-        </View>
+        var bounds = L.latLngBounds([
+          [${sourceCoords?.latitude || 0}, ${sourceCoords?.longitude || 0}],
+          [${destinationCoords?.latitude || 0}, ${destinationCoords?.longitude || 0}]
+        ]);
+
+        map.fitBounds(bounds);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{ y}.png', {
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        var sourceMarker = L.marker([${sourceCoords?.latitude || 0}, ${sourceCoords?.longitude || 0}]).addTo(map);
+        sourceMarker.bindPopup("<b>Source:</b> ${user?.source}").openPopup();
+
+        var destinationMarker = L.marker([${destinationCoords?.latitude || 0}, ${destinationCoords?.longitude || 0}]).addTo(map);
+        destinationMarker.bindPopup("<b>Destination:</b> ${user?.destination}");
+      </script>
+    </body>
+    </html>
+  `;
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.details}>
+        <Text style={styles.title}>Rider Information</Text>
+        <Text style={styles.label}>Name:</Text>
+        <Text style={styles.value}>{user.name}</Text>
+        <Text style={styles.label}>Start:</Text>
+        <Text style={styles.value}>{user.source}</Text>
+        <Text style={styles.label}>Destination:</Text>
+        <Text style={styles.value}>{user.destination}</Text>
+      </View>
+      {sourceCoords && destinationCoords ? (
+        <WebView
+          originWhitelist={['*']}
+          source={{ html: openStreetMapHtml }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          style={styles.map}
+        />
       ) : (
-        <Text>No user data found</Text>
+        <Text style={styles.errorText}>Unable to load map. Please check coordinates.</Text>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: '#1E1E2C',
   },
   details: {
     marginBottom: 20,
+    padding: 20,
+    backgroundColor: '#2B2B3C',
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#F5F5F7',
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#B3B3C5',
+  },
+  value: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#E0E0F0',
   },
   map: {
     width: '100%',
     height: 300,
     marginTop: 20,
+    borderRadius: 15,
+    overflow: 'hidden',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1E1E2C',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#FEFFD2',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    textAlign: 'center',
   },
 });
 

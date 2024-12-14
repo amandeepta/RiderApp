@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 type RootStackParamList = {
   Rides: { pickup: string; dropoff: string };
   RideDetails: { rideId: string };
-  RiderInfo: { id: string }; // Add RiderInfo screen with 'id' parameter
+  RiderInfo: { id: string };
 };
 type RidesProps = NativeStackScreenProps<RootStackParamList, 'Rides'>;
 
@@ -25,9 +25,9 @@ const Rides: React.FC<RidesProps> = ({ route, navigation }) => {
         });
 
         if (response.data.success) {
-          setData(response.data.data); // The data is inside response.data.data
+          setData(response.data.data);
         } else {
-          setError(response.data.message); // If no rides are found or other message
+          setError(response.data.message);
         }
       } catch (error: any) {
         setError(error.response?.data?.message || error.message || 'An error occurred');
@@ -42,7 +42,7 @@ const Rides: React.FC<RidesProps> = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4caf50" />
+        <ActivityIndicator size="large" color="#6C63FF" />
         <Text style={styles.loadingText}>Searching for rides...</Text>
       </View>
     );
@@ -71,7 +71,7 @@ const Rides: React.FC<RidesProps> = ({ route, navigation }) => {
         <TouchableOpacity
           key={index}
           style={styles.rideCard}
-          onPress={() => navigation.navigate('RiderInfo', { id: item._id })} // Navigate to RiderInfo with id
+          onPress={() => navigation.navigate('RiderInfo', { id: item._id })}
         >
           <Text style={styles.rideText}>Driver: {item.name}</Text>
           <Text style={styles.rideText}>From: {item.source}</Text>
@@ -85,48 +85,48 @@ const Rides: React.FC<RidesProps> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#1E1E2C',
     padding: 20,
     justifyContent: 'center',
   },
   loadingText: {
     marginTop: 10,
-    fontSize: 16,
-    color: '#555',
+    fontSize: 18,
+    color: '#8F94FB',
     textAlign: 'center',
   },
   errorText: {
-    color: 'red',
-    fontSize: 18,
+    color: '#FF6B6B',
+    fontSize: 20,
     textAlign: 'center',
   },
   noRidesText: {
-    fontSize: 18,
-    color: '#666',
+    fontSize: 20,
+    color: '#B3B3C5',
     textAlign: 'center',
   },
   headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 30,
     textAlign: 'center',
   },
   rideCard: {
-    backgroundColor: '#ffffff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+    backgroundColor: '#2B2B3C',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
   },
   rideText: {
-    fontSize: 16,
-    color: '#444',
-    marginBottom: 5,
+    fontSize: 18,
+    color: '#E0E0F0',
+    marginBottom: 8,
   },
 });
 
