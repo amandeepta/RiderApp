@@ -5,19 +5,18 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaView, Text, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RiderInfo from './RiderInfo';
-// Import Screens
+
 import Rides from './Rides';
 import Search from './Tab/Search';
 import Create from './Tab/Create';
 
-// Define navigation parameter types
+
 type RootStackParamList = {
   Rides: { pickup: string; dropoff: string };
   RiderInfo: { id: string };
   Main: undefined;
 };
 
-// Create navigators
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Button } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import axios from 'axios';
 import { WebView } from 'react-native-webview';
@@ -16,7 +16,7 @@ interface RiderInfoProps {
 
 const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
   const { id } = route.params;
-  const [user, setUser ] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sourceCoords, setSourceCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -39,11 +39,9 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
           longitude: parseFloat(result.lon),
         };
       } else {
-        console.error('Could not find coordinates for the address:', address);
         return null;
       }
     } catch (err) {
-      console.error('Failed to fetch coordinates for:', address, err);
       return null;
     }
   };
@@ -53,7 +51,7 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
       try {
         const response = await axios.post('https://riderserver.onrender.com/info', { id: id });
         const userData = response.data.data;
-        setUser (userData);
+        setUser(userData);
 
         const sourceCoordinates = await getCoordinates(userData.source);
         const destinationCoordinates = await getCoordinates(userData.destination);
@@ -70,7 +68,6 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
           setError('Unable to retrieve destination coordinates.');
         }
       } catch (err) {
-        console.error('Failed to fetch user data:', err);
         setError('Failed to fetch user data');
       } finally {
         setLoading(false);
@@ -124,7 +121,7 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
 
         map.fitBounds(bounds);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{ y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(map);
 
@@ -133,6 +130,11 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
 
         var destinationMarker = L.marker([${destinationCoords?.latitude || 0}, ${destinationCoords?.longitude || 0}]).addTo(map);
         destinationMarker.bindPopup("<b>Destination:</b> ${user?.destination}");
+
+        var polyline = L.polyline([
+          [${sourceCoords?.latitude || 0}, ${sourceCoords?.longitude || 0}],
+          [${destinationCoords?.latitude || 0}, ${destinationCoords?.longitude || 0}]
+        ], { color: 'blue' }).addTo(map);
       </script>
     </body>
     </html>
@@ -148,6 +150,7 @@ const RiderInfo: React.FC<RiderInfoProps> = ({ route }) => {
         <Text style={styles.value}>{user.source}</Text>
         <Text style={styles.label}>Destination:</Text>
         <Text style={styles.value}>{user.destination}</Text>
+        <Button title="Contact Rider Phone" onPress={() => alert(`Contacting ${user.phone}`)} />
       </View>
       {sourceCoords && destinationCoords ? (
         <WebView
